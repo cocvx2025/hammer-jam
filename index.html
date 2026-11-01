@@ -241,6 +241,7 @@ td.name{background:#0D1236}
       <span class="live" id="live"><span class="dot pulse"></span><span id="liveTxt">LIVE</span></span>
       <span class="clock num" id="clock"></span>
       <button id="wipeBtn" onclick="wipeAll()" title="مسح بيانات التجارب" style="background:rgba(255,60,90,.15);border:1px solid rgba(255,60,90,.5);color:#ff6b81;border-radius:10px;padding:4px 10px;cursor:pointer;font:inherit">🗑 مسح البيانات</button>
+      <button onclick="logout()" title="تسجيل خروج" style="background:rgba(120,140,255,.12);border:1px solid rgba(120,140,255,.45);color:#9fb0ff;border-radius:10px;padding:4px 10px;cursor:pointer;font:inherit">🚪 خروج</button>
     </div>
   </header>
 
@@ -317,6 +318,8 @@ var FB_KEY = "AIzaSyAzYz8Xruk1TohKdKTaZjmiSI3zun4tqSA";
 var ID_TOKEN = null, ID_EXP = 0;
 function getRT(){ try{ return localStorage.getItem("hj_rt") }catch(e){ return null } }
 function setRT(v){ try{ v ? localStorage.setItem("hj_rt",v) : localStorage.removeItem("hj_rt") }catch(e){} }
+
+function logout(){ setRT(null); location.reload(); }
 
 function srvNow(){ return Date.now() + OFFSET }
 

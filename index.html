@@ -402,9 +402,17 @@ function build(j){
   });
   LOG = (j.log||[]).map(function(r){
     var e = idOf[r.emulator];
-    return [new Date(r.time).toLocaleTimeString("en-GB"), e?e.id:"?", r.name||"—", r.text||"", r.kind||"calc"];
+    return [logTime(r.time), e?e.id:"?", r.name||"—", r.text||"", r.kind||"calc"];
   });
   T0 = Date.now(); LOADED = true;
+}
+
+// وقت السجل: "الأحد 1 نوفمبر · 10:05 ص" (12 ساعة، صباحًا/مساءً)
+var MONTHS=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+var DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+function logTime(ms){
+  var d=new Date(ms), h=d.getHours(), ap=h<12?"ص":"م", h12=h%12||12;
+  return DAYS[d.getDay()]+" "+d.getDate()+" "+MONTHS[d.getMonth()]+" · "+h12+":"+p2(d.getMinutes())+" "+ap;
 }
 
 function setLive(ok, msg){
@@ -574,7 +582,7 @@ function viewLog(){
     var t=LOGT[r[4]]||["•","var(--grad)"];
     return '<div class="ev"><span class="ic" style="background:'+t[1]+'">'+t[0]+'</span>'+
       '<div>'+(r[2]==="—"?"":'<span class="who">'+ltr(r[2])+'</span>')+'<span class="txt">'+lvl(r[3])+'</span></div>'+
-      '<div class="meta">'+ltr(r[0])+' · محاكي '+r[1]+'</div></div>';
+      '<div class="meta"><span style="color:var(--sub)">🕒 '+r[0]+'</span> · محاكي '+r[1]+'</div></div>';
   }).join("")+'</section>';
 }
 

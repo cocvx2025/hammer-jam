@@ -240,6 +240,7 @@ td.name{background:#0D1236}
     <div class="top-r">
       <span class="live" id="live"><span class="dot pulse"></span><span id="liveTxt">LIVE</span></span>
       <span class="clock num" id="clock"></span>
+      <button id="wipeBtn" onclick="wipeAll()" title="مسح بيانات التجارب" style="background:rgba(255,60,90,.15);border:1px solid rgba(255,60,90,.5);color:#ff6b81;border-radius:10px;padding:4px 10px;cursor:pointer;font:inherit">🗑 مسح البيانات</button>
     </div>
   </header>
 
@@ -350,6 +351,20 @@ function token(){
     if(!j.id_token){ setRT(null); throw new Error("login") }
     ID_TOKEN=j.id_token; ID_EXP=Date.now()+(+j.expires_in||3600)*1000; setRT(j.refresh_token||rt); return ID_TOKEN;
   });
+}
+
+// مسح الحسابات + النبضات + السجل (يبقي أرقام المحاكيات). الكتابة مسموحة لحساب البوت فقط.
+function wipeAll(){
+  if(!confirm("متأكد؟ بيمسح كل الحسابات والسجل نهائيًا")) return;
+  if(prompt("اكتب: امسح")!=="امسح") return;
+  token().then(function(t){
+    return Promise.all(["accounts","beats","log"].map(function(k){
+      return fetch(FB_DB+"/hammer/"+k+".json?auth="+encodeURIComponent(t),{method:"DELETE"});
+    }));
+  }).then(function(rs){
+    if(rs.some(function(r){return !r.ok})) alert("ما عندك صلاحية مسح (حساب القراءة فقط)");
+    else { alert("تم المسح ✅"); load(); }
+  }).catch(function(e){ alert("فشل: "+e.message) });
 }
 
 function load(){

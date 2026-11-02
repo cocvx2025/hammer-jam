@@ -413,6 +413,7 @@ function build(j){
       b: b, a: cur, up: up, w: w, max: maxed,
       cur: e && e.acc===a.account && e.beat<=OFFLINE_AFTER,
       pot: a.potion_end ? Math.max(0,(a.potion_end-now)/1000) : 0,
+      potFrom: a.potion_start || 0,
       back: a.back_at ? Math.max(0,(a.back_at-now)/1000) : 0,
       used: +a.potions_total || +a.potions_used || 0,
       updated: a.updated
@@ -464,6 +465,8 @@ function hasHeroes(a){return a.a.some(function(v){return v>0})}
 function timer(t,b,acc,done,key){
   return '<span data-t="'+t+'" data-b="'+b+'"'+(done?' data-done="'+done+'"':'')+(key?' data-k="'+key+'"':'')+'></span>';
 }
+// وقت 12 ساعة: 3:20 م
+function hm(t){var d=new Date(t),h=d.getHours(),m=d.getMinutes();return (h%12||12)+":"+(m<10?"0":"")+m+(h<12?" ص":" م")}
 function progress(a){var s=0,m=0;a.a.forEach(function(v,i){if(v){s+=v;m+=HMAX[i]}});return m?Math.round(100*s/m):0}
 function rankOf(p){for(var i=0;i<RANKS.length;i++) if(p>=RANKS[i][0]) return RANKS[i]}
 function awards(){var g=null,p=null;ACCS.forEach(function(a){if(!g||gain(a)>gain(g))g=a; if(!p||a.used>p.used)p=a});return {gain:g,pot:p}}
@@ -501,7 +504,7 @@ function accCard(a){
   var i=ACCS.indexOf(a), tags="";
   if(a.cur) tags+='<span class="pill accent"><span class="dot pulse"></span>البوت هنا الحين</span>';
   if(a.max) tags+='<span class="pill ok">★ الملوك ماكس</span>';
-  if(a.pot>0) tags+='<span class="pill warn">⚗ '+timer("r",a.pot,null,"انتهت")+'</span>';
+  if(a.pot>0) tags+='<span class="pill warn">⚗ '+(a.potFrom?'فُعّلت '+hm(a.potFrom)+' · باقي ':'')+timer("r",a.pot,null,"انتهت")+'</span>';
   var g=gain(a); if(g>0) tags+='<span class="pill violet">'+plus(g)+' لفل</span>';
   if(AW.gain===a&&g>0) tags+='<span class="pill award">🏆 الأكثر ترقية</span>';
   if(AW.pot===a&&a.used>0) tags+='<span class="pill award">⚗ ملك الجرعات</span>';
@@ -619,7 +622,7 @@ function viewPotions(){
        '<div class="flask"><span class="big">'+a.used+'</span><div style="flex:1"><div class="bar"><i style="width:'+(100*a.used/maxU)+'%;background:linear-gradient(90deg,#A66CFF,#FF5FD8);box-shadow:0 0 12px #A66CFF"></i></div>'+
        '<div class="sm sub" style="margin-top:4px;font-weight:700">جرعة مستخدمة</div></div></div>'+
        '<div class="prow"><span>وقت موفّر</span><b class="c-ok">'+ltr(s)+' ساعة <span class="muted" style="font-weight:600;text-shadow:none">(≈ '+Math.round(s/24)+' يوم)</span></b></div>'+
-       '<div class="prow"><span>الحين</span>'+(a.pot>0?'<span class="pill warn">⚗ '+timer("r",a.pot,null,"انتهت")+'</span>':'<span class="muted">غير مفعّلة</span>')+'</div></article>';
+       '<div class="prow"><span>الحين</span>'+(a.pot>0?'<span class="pill warn">⚗ '+(a.potFrom?'فُعّلت '+hm(a.potFrom)+' · باقي ':'')+timer("r",a.pot,null,"انتهت")+'</span>':'<span class="muted">غير مفعّلة</span>')+'</div></article>';
   });
   return h+'</div>';
 }

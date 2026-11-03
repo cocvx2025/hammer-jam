@@ -380,7 +380,7 @@ function load(){
   }).then(function(h){
     h=h||{};
     var accounts=[], beats=[];
-    Object.keys(h.accounts||{}).forEach(function(ek){ var g=h.accounts[ek]||{}; Object.keys(g).forEach(function(ak){ if(g[ak]) accounts.push(g[ak]) }) });
+    Object.keys(h.accounts||{}).forEach(function(ek){ var g=h.accounts[ek]||{}; Object.keys(g).forEach(function(ak){ if(g[ak]){ g[ak]._path=ek+"/"+ak; accounts.push(g[ak]) } }) });
     Object.keys(h.beats||{}).forEach(function(ek){ var b=h.beats[ek]; if(b) beats.push({emulator:b.emulator||ek, account_id:b.account||0, doing:b.doing||"", beat_at:b.beat_at||0}) });
     build({now:srvNow(), accounts:accounts, beats:beats, log:h.log?Object.keys(h.log).map(function(k){return h.log[k]}).sort(function(a,b){return b.time-a.time}).slice(0,100):[]});
     LAST_OK=Date.now(); setLive(true); render();
@@ -416,7 +416,7 @@ function build(j){
       potFrom: a.potion_start || 0,
       back: a.back_at ? Math.max(0,(a.back_at-now)/1000) : 0,
       used: +a.potions_total || +a.potions_used || 0,
-      updated: a.updated
+      updated: a.updated, path: a._path
     };
   });
   LOG = (j.log||[]).map(function(r){
@@ -608,6 +608,20 @@ function viewLog(){
 }
 
 // ═══════════ الجرعات ═══════════
+// تسجيل جرعة فعّلها المستخدم بيده — البوت يقرأها من هنا وما يفعّل فوقها (كل جرعة = ساعة)
+function addPotion(path, name){
+  var n=parseInt(prompt("كم جرعة فعّلت في "+name+"؟","1"),10); if(!(n>0)) return;
+  var m=parseInt(prompt("قبل كم دقيقة فعّلتها؟ (0 = الحين)","0"),10); if(isNaN(m)||m<0) m=0;
+  var start=srvNow()-m*60000, end=start+n*3600000;
+  token().then(function(t){
+    return fetch(FB_DB+"/hammer/accounts/"+path+".json?auth="+encodeURIComponent(t),{
+      method:"PATCH",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({potion_start:start,potion_end:end,back_at:end,updated:srvNow()})});
+  }).then(function(r){
+    if(!r.ok) alert("ما عندك صلاحية كتابة (حساب القراءة فقط)");
+    else { alert("تم ✅ تنتهي "+hm(end)); load(); }
+  }).catch(function(e){ alert("فشل: "+e.message) });
+}
 function viewPotions(){
   var all=filteredAccs(), tu=0, act=0, maxU=1;
   all.forEach(function(a){tu+=a.used; if(a.pot>0) act++; maxU=Math.max(maxU,a.used)});
@@ -622,7 +636,9 @@ function viewPotions(){
        '<div class="flask"><span class="big">'+a.used+'</span><div style="flex:1"><div class="bar"><i style="width:'+(100*a.used/maxU)+'%;background:linear-gradient(90deg,#A66CFF,#FF5FD8);box-shadow:0 0 12px #A66CFF"></i></div>'+
        '<div class="sm sub" style="margin-top:4px;font-weight:700">جرعة مستخدمة</div></div></div>'+
        '<div class="prow"><span>وقت موفّر</span><b class="c-ok">'+ltr(s)+' ساعة <span class="muted" style="font-weight:600;text-shadow:none">(≈ '+Math.round(s/24)+' يوم)</span></b></div>'+
-       '<div class="prow"><span>الحين</span>'+(a.pot>0?'<span class="pill warn">⚗ '+(a.potFrom?'فُعّلت '+hm(a.potFrom)+' · باقي ':'')+timer("r",a.pot,null,"انتهت")+'</span>':'<span class="muted">غير مفعّلة</span>')+'</div></article>';
+       '<div class="prow"><span>الحين</span>'+(a.pot>0?'<span class="pill warn">⚗ '+(a.potFrom?'فُعّلت '+hm(a.potFrom)+' · باقي ':'')+timer("r",a.pot,null,"انتهت")+'</span>':'<span class="muted">غير مفعّلة</span>')+'</div>'+
+       (a.path?'<button onclick="addPotion(\''+a.path+'\',\''+String(a.n).replace(/[\'"\\]/g,"")+'\')" style="width:100%;margin-top:10px;padding:9px;border-radius:12px;background:var(--grad);font-weight:800;color:#fff">⚗ سجّل جرعة فعّلتها بيدك</button>':'')+
+       '</article>';
   });
   return h+'</div>';
 }

@@ -321,6 +321,13 @@ function setRT(v){ try{ v ? localStorage.setItem("hj_rt",v) : localStorage.remov
 
 function logout(){ setRT(null); location.reload(); }
 
+// حساب البوت (bot@hammer.app) بس يقدر يكتب — القارئ ما تطلع له أزرار الكتابة
+var BOT_EMAIL = "bot@hammer.app";
+function isBot(){
+  try{ var p=JSON.parse(atob(ID_TOKEN.split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));
+       return (p.email||"").toLowerCase()===BOT_EMAIL }catch(e){ return false }
+}
+
 function srvNow(){ return Date.now() + OFFSET }
 
 function showLogin(msg){
@@ -637,7 +644,7 @@ function viewPotions(){
        '<div class="sm sub" style="margin-top:4px;font-weight:700">جرعة مستخدمة</div></div></div>'+
        '<div class="prow"><span>وقت موفّر</span><b class="c-ok">'+ltr(s)+' ساعة <span class="muted" style="font-weight:600;text-shadow:none">(≈ '+Math.round(s/24)+' يوم)</span></b></div>'+
        '<div class="prow"><span>الحين</span>'+(a.pot>0?'<span class="pill warn">⚗ '+(a.potFrom?'فُعّلت '+hm(a.potFrom)+' · باقي ':'')+timer("r",a.pot,null,"انتهت")+'</span>':'<span class="muted">غير مفعّلة</span>')+'</div>'+
-       (a.path?'<button onclick="addPotion(\''+a.path+'\',\''+String(a.n).replace(/[\'"\\]/g,"")+'\')" style="width:100%;margin-top:10px;padding:9px;border-radius:12px;background:var(--grad);font-weight:800;color:#fff">⚗ سجّل جرعة فعّلتها بيدك</button>':'')+
+       (a.path&&isBot()?'<button onclick="addPotion(\''+a.path+'\',\''+String(a.n).replace(/[\'"\\]/g,"")+'\')" style="width:100%;margin-top:10px;padding:9px;border-radius:12px;background:var(--grad);font-weight:800;color:#fff">⚗ سجّل جرعة فعّلتها بيدك</button>':'')+
        '</article>';
   });
   return h+'</div>';
@@ -647,6 +654,7 @@ function viewPotions(){
 function setTab(v){TAB=v;render()} function setSub(v){SUB=v;render()} function setEmu(v){EMU=v;render()}
 function render(){
   if(!LOADED) return;
+  var wb=$("wipeBtn"); if(wb) wb.style.display=isBot()?"":"none";
   AW=awards();
   var tg=0,tp=0; ACCS.forEach(function(a){tg+=gain(a); tp+=a.used});
   var online=EMUS.filter(function(e){return !isOff(e)}).length;
